@@ -1,0 +1,40 @@
+crypto-analysis/
+├─ src/                      # ВСЁ исполняемое приложение и пакеты
+│  ├─ binance/               # обёртки над внешним API Binance (REST/WebSocket)
+│  │  ├─ __init__.py
+│  │  └─ api.py
+│  ├─ collectors/            # скрипты/модули, которые что-то "собирают" (ingest)
+│  │  ├─ __init__.py
+│  │  └─ prices_collector.py
+│  ├─ etl/                   # нормализация, загрузка в БД, агрегаты
+│  │  ├─ __init__.py
+│  │  ├─ normalize.py
+│  │  ├─ load_postgres.py
+│  │  └─ aggregate.py
+│  ├─ analytics/             # расчёт метрик, модели, корреляции, события
+│  │  ├─ __init__.py
+│  │  ├─ volatility.py
+│  │  ├─ volumes_time_profiles.py
+│  │  └─ correlations.py
+│  ├─ dashboard/             # веб-интерфейс (Streamlit/Dash)
+│  │  └─ app.py
+│  ├─ utils/                 # общие утилиты: логирование, конфиги и т.п.
+│  │  ├─ __init__.py
+│  │  └─ logging.py
+│  └─ main.py                # единая точка входа/CLI
+├─ db/                       # схема БД, миграции (Alembic), SQL-скрипты
+│  ├─ schema.sql
+│  └─ alembic/
+├─ notebooks/                # экспериментальные исследования/EDA
+│  └─ exploratory.ipynb
+├─ tests/                    # pytest-тесты, зеркалят пакеты из src/
+│  └─ test_prices.py
+├─ .data_samples/            # маленькие образцы данных для тестов/демо (в git)
+├─ data/                     # реальные данные (в .gitignore)
+├─ docker/                   # Dockerfile(ы), compose, entrypoints, окружение
+│  ├─ Dockerfile
+│  └─ docker-compose.yml
+├─ .env.example              # пример переменных окружения (без секретов)
+├─ pyproject.toml            # зависимости/конфигурация инструментария (ВОЗМОЖНО когда-нибудь)
+├─ .gitignore
+└─ README.md
