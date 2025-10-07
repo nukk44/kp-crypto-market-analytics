@@ -5,61 +5,64 @@ from datetime import datetime, timezone
 from typing import List
 from dotenv import load_dotenv
 
-# Загружаем переменные окружения из .env файла (если он есть)
-# Например: BINANCE_BASE_URL, DATA_DIR и т.д.
 load_dotenv()
 
-# Получаем базовый URL Binance API из окружения или используем дефолт
-BASE_URL = os.getenv("BINANCE_BASE_URL", "https://api.binance.com")
+# Можно переопределить через переменную окружения BINANCE_HOSTS
+_HOSTS = [
+    h.strip() for h in os.getenv(
+        "BINANCE_HOSTS",
+        "https://api4.binance.com,https://api.binance.com,https://api1.binance.com,https://api2.binance.com,https://api3.binance.com"
+    ).split(",")
+    if h.strip()
+]
 
-
-# Переводит datetime в миллисекунды (Binance использует время в ms).
 def _ms(dt: datetime) -> int:
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return int(dt.timestamp() * 1000)
 
+def _get_json(path: str, params: dict, timeout: int = 20):
+    """Ходим по списку хостов, пока один не ответит 200."""
+    last_err = None
+    for base in _HOSTS:
+        url = f"{base}{path}"
+        try:
+            r = requests.get(url, params=params, timeout=timeout)
+            # 451/403/429/5xx — пробуем следующий хост
+            if r.status_code in (451, 403, 429, 500, 502, 503):
+                last_err = requests.HTTPError(f"{r.status_code} from {url}")
+                continue
+            r.raise_for_status()
+            return r.json()
+        except requests.RequestException as e:
+            last_err = e
+            continue
+        finally:
+            time.sleep(0.1)  # чуть-чуть притормозим
+    raise last_err or RuntimeError("All Binance hosts failed")
 
 def get_klines(*,
-    symbol: str,
-    interval: str,
-    start_time: datetime,
-    end_time: datetime,
-    limit: int = 1000,
-    sleep_sec: float = 0.1,
-) -> List[List]:
+               symbol: str,
+               interval: str,
+               start_time: datetime,
+               end_time: datetime,
+               limit: int = 1000,
+               sleep_sec: float = 0.1,
+               ) -> List[List]:
     """
-    Запрашивает исторические свечи (klines) для заданного символа на Binance.
-
-    symbol: торговая пара, например "BTCUSDT"
-    interval: таймфрейм (например, "1m", "5m", "1h")
-    start_time, end_time: временной диапазон для выгрузки
-    limit: максимальное количество свечей за 1 запрос (макс. 1000 у Binance)
-    sleep_sec: небольшая пауза между запросами, чтобы не словить rate limit
-
-    Возвращает "сырые" свечи — список списков вида:
-    [
-        [
-            1499040000000,      // Open time
-            "0.01634790",       // Open
-            "0.80000000",       // High
-            "0.01575800",       // Low
-            "0.01577100",       // Close
-            "148976.11427815",  // Volume
-            1499644799999,      // Close time
-            "2434.19055334",    // Quote asset volume
-            308,               // Number of trades
-            "1756.87402397",    // Taker buy base volume
-            "28.46694368",      // Taker buy quote volume
-            "0"                // Ignore
-        ],
-        ...
-    ]
+    Возвращает "сырые" свечи Binance (или синтетические в OFFLINE).
     """
-    # Формируем URL для REST запроса
-    url = f"{BASE_URL}/api/v3/klines"
+    # OFFLINE режим для тестов/CI: возвращаем маленький синтетический набор
+    if os.getenv("OFFLINE") == "1":
+        start_ms = _ms(start_time)
+        step = 60_000  # 1m
+        out = []
+        for i in range(min(limit, 10)):
+            t = start_ms + i * step
+            out.append([t, "1.0", "1.0", "1.0", "1.0", "0", t + step - 1, "0", 0, "0", "0", "0"])
+        time.sleep(sleep_sec)
+        return out
 
-    # Подготавливаем параметры запроса
     params = {
         "symbol": symbol.upper(),
         "interval": interval,
@@ -67,15 +70,6 @@ def get_klines(*,
         "endTime": _ms(end_time),
         "limit": limit,
     }
-
-    # Отправляем GET-запрос
-    response = requests.get(url, params=params, timeout=20)
-    response.raise_for_status()  # если ошибка → будет исключение
-
-    # Разбираем JSON-ответ от Binance
-    data = response.json()
-
-    # Небольшая задержка, чтобы не попасть под rate limit API
+    data = _get_json("/api/v3/klines", params)
     time.sleep(sleep_sec)
-
     return data

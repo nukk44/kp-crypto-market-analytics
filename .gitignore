@@ -69,3 +69,11 @@ Thumbs.db
 
 # PyCharm project settings
 *.iml
+# Data / artifacts
+data/*
+!data/README.txt
+figs/*
+!figs/.gitkeep
+
+# Local helpers
+snapshot.md
