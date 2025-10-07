@@ -20,7 +20,7 @@ def _ms(dt: datetime) -> int:
     return int(dt.timestamp() * 1000)
 
 
-def get_klines(
+def get_klines(*,
     symbol: str,
     interval: str,
     start_time: datetime,

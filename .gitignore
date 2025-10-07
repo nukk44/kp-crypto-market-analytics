@@ -42,6 +42,7 @@ __pycache__/
 .venv/
 venv/
 env/
+.env
 
 # Distribution / packaging
 build/

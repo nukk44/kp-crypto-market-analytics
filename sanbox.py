@@ -4,6 +4,6 @@ from src.binance.api import get_klines
 end = datetime.now(timezone.utc)
 start = end - timedelta(hours=1)
 
-data = get_klines("BTCUSDT", "1m", start, end)
+data = get_klines(symbol="BTCUSDT", interval="1m", start_time=start, end_time=end)
 print(f"Получено {len(data)} свечей")
 print("Пример первой свечи:", data[0])
