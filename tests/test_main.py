@@ -1,34 +1,22 @@
-import requests
-import time
+import os
+import sys
+import subprocess
+from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
 
-def get_bitcoin_price():
-    """Возвращает текущую цену BTC/USDT с Binance."""
-    response = requests.get(
-        'https://api.binance.com/api/v3/ticker/price',
-        params={'symbol': 'BTCUSDT'}
-    )
-    response.raise_for_status()
-    data = response.json()
-    return float(data['price'])
+def run_cli(args):
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(SRC)
+    env["OFFLINE"] = "1"         # <--- чтобы не ходить в интернет
+    cmd = [sys.executable, "-m", "src.main", *args]
+    return subprocess.check_output(cmd, env=env).decode("utf-8")
 
+def test_cli_price_ticks_runs():
+    out = run_cli(["price-ticks", "--n", "2", "--delay", "0.1"])
+    assert "values" in out and "count" in out
 
-def collect_prices(n=5, delay=1):
-    """Собирает n цен с заданным интервалом delay (в секундах)."""
-    prices = []
-    for _ in range(n):
-        try:
-            price = round(get_bitcoin_price(), 2)
-            prices.append(price)
-        except requests.RequestException as e:
-            print("Ошибка:", e)
-        time.sleep(delay)
-    return prices
-
-
-if __name__ == "__main__":
-    prices = collect_prices(5, 1)
-    print("Собранные цены:", prices)
-    print("Количество:", len(prices))
-    print("Максимум:", max(prices))
-    print("Минимум:", min(prices))
+def test_binance_klines_function_import():
+    from src.binance.api import get_klines
+    assert callable(get_klines)
