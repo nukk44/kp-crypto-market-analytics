@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16
+    container_name: crypto_pg
+    environment:
+      POSTGRES_USER: crypto
+      POSTGRES_PASSWORD: crypto
+      POSTGRES_DB: crypto
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crypto -d crypto"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  pgdata:
