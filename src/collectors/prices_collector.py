@@ -6,6 +6,10 @@ from ..binance.api import get_klines
 def _utc_now():
     return datetime.now(timezone.utc)
 
+def ms_to_iso_utc(ms: int) -> str:
+    """Переводит миллисекунды Binance в ISO-строку UTC."""
+    return datetime.fromtimestamp(ms / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+
 def run(pairs: Iterable[str], tf: str = "1m", days: int = 3, out_dir: str = "data"):
     os.makedirs(out_dir, exist_ok=True)
     end   = _utc_now()
@@ -23,7 +27,19 @@ def run(pairs: Iterable[str], tf: str = "1m", days: int = 3, out_dir: str = "dat
         path = os.path.join(out_dir, f"klines_{sym}_{tf}.csv")
         with open(path, "w", newline="") as f:
             w = csv.writer(f)
-            w.writerow(["open_time","open","high","low","close","volume","close_time","quote_volume","trades","taker_buy_base","taker_buy_quote"])
+            w.writerow(["symbol", "tf", "open_time", "open", "high", "low", "close", "volume", "num_trades"])
+
             for r in rows:
-                w.writerow([r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[10]])
+                w.writerow([
+                    sym,  # торговая пара (BTCUSDT, ETHUSDT ...)
+                    tf,  # таймфрейм (1m, 5m ...)
+                    ms_to_iso_utc(int(r[0])),  # время открытия в UTC ISO
+                    r[1],  # open
+                    r[2],  # high
+                    r[3],  # low
+                    r[4],  # close
+                    r[5],  # volume
+                    int(r[8]),  # num_trades (индекс 8 в API Binance)
+                ])
+
         print(f"[collector] saved {path} ({len(rows)} rows)")
