@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 # Абсолютные импорты — удобно для запуска файла через IDE
 from src.binance.api import _get_json  # вспомогательная функция для тикера
 from src.collectors.prices_collector import run as collect_run
+from src.collectors.trades_collector import run as collect_trades_run
+
 
 load_dotenv()
 
@@ -46,6 +48,12 @@ def build_parser() -> argparse.ArgumentParser:
                            help="за сколько дней назад до сейчас")
     p_collect.add_argument("--out", default=os.getenv("OUT_DIR", "data"),
                            help="папка для сохранения данных")
+
+    p_trades = sub.add_parser("collect-trades", help="Собрать сделки (trades) по списку пар")
+    p_trades.add_argument("--pairs", default=os.getenv("PAIRS", "BTCUSDT,ETHUSDT"),
+                          help="список пар через запятую")
+    p_trades.add_argument("--out", default=os.getenv("OUT_DIR", "data"),
+                          help="папка для сохранения данных")
     return p
 
 
@@ -113,6 +121,8 @@ def main():
         print({"count": len(vals), "min": min(vals), "max": max(vals), "values": vals})
     elif args.cmd == "collect-klines":
         collect_run(pairs=parse_pairs(args.pairs), tf=args.tf, days=args.days, out_dir=args.out)
+    elif args.cmd == "collect-trades":
+        collect_trades_run(pairs=parse_pairs(args.pairs), out_dir=args.out)
     else:
         parser.print_help()
 
