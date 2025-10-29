@@ -16,12 +16,14 @@ CREATE TABLE IF NOT EXISTS candles (
 
 CREATE TABLE IF NOT EXISTS trades (
     symbol TEXT NOT NULL,
-    trade_id BIGINT PRIMARY KEY,
+    trade_id BIGINT NOT NULL,
     price NUMERIC(20,8) NOT NULL,
     qty NUMERIC(20,8) NOT NULL,
     quote_qty NUMERIC(20,8) NOT NULL,
     trade_time TIMESTAMP NOT NULL,
     is_buyer_maker BOOLEAN NOT NULL,
-    is_best_match BOOLEAN NOT NULL
+    is_best_match BOOLEAN NOT NULL,
+    PRIMARY KEY (symbol, trade_id)
 );
+
 
