@@ -26,4 +26,14 @@ CREATE TABLE IF NOT EXISTS trades (
     PRIMARY KEY (symbol, trade_id)
 );
 
+CREATE TABLE IF NOT EXISTS order_books (
+    symbol TEXT NOT NULL,
+    price NUMERIC(20,8) NOT NULL,
+    qty NUMERIC(20,8) NOT NULL,
+    side TEXT NOT NULL CHECK (side IN ('bid', 'ask')),
+    update_id BIGINT NOT NULL,
+    update_time TIMESTAMP NOT NULL,
+    PRIMARY KEY (symbol, side, price, update_id)
+);
+
 
