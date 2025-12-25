@@ -18,5 +18,12 @@ def test_cli_price_ticks_runs():
     assert "values" in out and "count" in out
 
 def test_binance_klines_function_import():
-    from src.binance.api import get_klines
+    import sys
+    from pathlib import Path
+
+    ROOT = Path(__file__).resolve().parents[1]
+    SRC = ROOT / "src"
+    sys.path.insert(0, str(SRC))
+
+    from binance.api import get_klines
     assert callable(get_klines)

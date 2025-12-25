@@ -77,3 +77,12 @@ figs/*
 
 # Local helpers
 snapshot.md
+
+# Local helpers (project-specific)
+.venv_freeze_before_numpy2.txt
+project_dump.txt
+dump_project.py
+src/data/
+kp-crypto-market-analytics_BACKUP/
+
+/kp-crypto-market-analytics_BACKUP
